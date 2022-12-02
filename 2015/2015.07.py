@@ -17,6 +17,9 @@ class Signal:
         self.reading = c_ushort(self._value).value
         return self.reading
 
+    def reset(self):
+        self.reading = None
+
 
 class Component:
     def __init__(self, label: str, srcs: Optional[List[Source]] = None):
@@ -38,6 +41,15 @@ class Component:
 
     def resolver(self):
         raise NotImplementedError
+
+    def reset(self):
+        if self.reading is None:
+            return
+        for _src in self.srcs:
+            if _src.reading is not None:
+                _src.reset()
+        self.reading = None
+        return
 
 
 class Wire(Component):
@@ -111,8 +123,11 @@ class Circuit:
         _w = wires[0] if len(wires) == 1 else wires
         return _w
 
-    def get_reading_for_wire(self, label) -> int:
+    def get_reading_for_wire(self, label: str) -> int:
         return self.wire_label_to_wire_object[label].resolve()
+
+    def reset(self, label: str):
+        self.wire_label_to_wire_object[label].reset()
 
 
 def create_sources(txt: Union[str, List[str]], _crc: Circuit) -> (Union[Source, List[Source]], Circuit):
@@ -126,54 +141,60 @@ def create_sources(txt: Union[str, List[str]], _crc: Circuit) -> (Union[Source, 
     return s, _crc
 
 
-crc = Circuit()
-
-with open("input/2015.07.in", "r") as f:
-    lines = f.readlines()
-for line in lines:
-    gate_search = re.search(r"[A-Z]+", line)
-    if gate_search is not None:
-        gate_name = gate_search.group()
-        if gate_name == "NOT":
-            lb_l, lb_r = re.search(r"NOT ([a-z]+|[0-9]+) -> ([a-z]+)", line).groups()
-            (s_l, crc), w_r = create_sources(lb_l, crc), crc.add_wires(lb_r)
-            g = Not([s_l])
-            w_r.add_srcs([g])
-        elif gate_name == "LSHIFT":
-            lb_l, shift, lb_r = re.search(r"([a-z]+|[0-9]+) LSHIFT ([0-9]+) -> ([a-z]+)", line).groups()
-            (s_l, crc), w_r = create_sources(lb_l, crc), crc.add_wires(lb_r)
-            g = LeftShift(int(shift), [s_l])
-            w_r.add_srcs([g])
-        elif gate_name == "RSHIFT":
-            lb_l, shift, lb_r = re.search(r"([a-z]+|[0-9]+) RSHIFT ([0-9]+) -> ([a-z]+)", line).groups()
-            (s_l, crc), w_r = create_sources(lb_l, crc), crc.add_wires(lb_r)
-            g = RightShift(int(shift), [s_l])
-            w_r.add_srcs([g])
-        elif gate_name == "AND":
-            lb_l1, lb_l2, lb_r = re.search(r"([a-z]+|[0-9]+) AND ([a-z]+|[0-9]+) -> ([a-z]+)", line).groups()
-            ((s_l1, s_l2), crc), w_r = create_sources([lb_l1, lb_l2], crc), crc.add_wires(lb_r)
-            g = And([s_l1, s_l2])
-            w_r.add_srcs([g])
-        elif gate_name == "OR":
-            lb_l1, lb_l2, lb_r = re.search(r"([a-z]+|[0-9]+) OR ([a-z]+|[0-9]+) -> ([a-z]+)", line).groups()
-            ((s_l1, s_l2), crc), w_r = create_sources([lb_l1, lb_l2], crc), crc.add_wires(lb_r)
-            g = Or([s_l1, s_l2])
-            w_r.add_srcs([g])
-        else:
-            raise NotImplementedError(gate_name)
-    else:
-        source_search = re.search(r"([0-9]+) -> ([a-z]+)", line)
-        if source_search is not None:
-            src, lb = source_search.groups()
-            w = crc.add_wires(lb)
-            w.add_srcs([Signal(src)])
-        else:
-            connector_search = re.search("([a-z]+) -> ([a-z]+)", line)
-            if connector_search is not None:
-                lb_l, lb_r = connector_search.groups()
-                w_l, w_r = crc.add_wires([lb_l, lb_r])
-                w_r.add_srcs([w_l])
+def run_circuit(instruction_manual_path: str, crc: Circuit):
+    with open(instruction_manual_path, "r") as f:
+        lines = f.readlines()
+    for line in lines:
+        gate_search = re.search(r"[A-Z]+", line)
+        if gate_search is not None:
+            gate_name = gate_search.group()
+            if gate_name == "NOT":
+                lb_l, lb_r = re.search(r"NOT ([a-z]+|[0-9]+) -> ([a-z]+)", line).groups()
+                (s_l, crc), w_r = create_sources(lb_l, crc), crc.add_wires(lb_r)
+                g = Not([s_l])
+                w_r.add_srcs([g])
+            elif gate_name == "LSHIFT":
+                lb_l, shift, lb_r = re.search(r"([a-z]+|[0-9]+) LSHIFT ([0-9]+) -> ([a-z]+)", line).groups()
+                (s_l, crc), w_r = create_sources(lb_l, crc), crc.add_wires(lb_r)
+                g = LeftShift(int(shift), [s_l])
+                w_r.add_srcs([g])
+            elif gate_name == "RSHIFT":
+                lb_l, shift, lb_r = re.search(r"([a-z]+|[0-9]+) RSHIFT ([0-9]+) -> ([a-z]+)", line).groups()
+                (s_l, crc), w_r = create_sources(lb_l, crc), crc.add_wires(lb_r)
+                g = RightShift(int(shift), [s_l])
+                w_r.add_srcs([g])
+            elif gate_name == "AND":
+                lb_l1, lb_l2, lb_r = re.search(r"([a-z]+|[0-9]+) AND ([a-z]+|[0-9]+) -> ([a-z]+)", line).groups()
+                ((s_l1, s_l2), crc), w_r = create_sources([lb_l1, lb_l2], crc), crc.add_wires(lb_r)
+                g = And([s_l1, s_l2])
+                w_r.add_srcs([g])
+            elif gate_name == "OR":
+                lb_l1, lb_l2, lb_r = re.search(r"([a-z]+|[0-9]+) OR ([a-z]+|[0-9]+) -> ([a-z]+)", line).groups()
+                ((s_l1, s_l2), crc), w_r = create_sources([lb_l1, lb_l2], crc), crc.add_wires(lb_r)
+                g = Or([s_l1, s_l2])
+                w_r.add_srcs([g])
             else:
-                raise NotImplementedError(line)
+                raise NotImplementedError(gate_name)
+        else:
+            source_search = re.search(r"([0-9]+) -> ([a-z]+)", line)
+            if source_search is not None:
+                src, lb = source_search.groups()
+                w = crc.add_wires(lb)
+                w.add_srcs([Signal(src)])
+            else:
+                connector_search = re.search("([a-z]+) -> ([a-z]+)", line)
+                if connector_search is not None:
+                    lb_l, lb_r = connector_search.groups()
+                    w_l, w_r = crc.add_wires([lb_l, lb_r])
+                    w_r.add_srcs([w_l])
+                else:
+                    raise NotImplementedError(line)
+    return crc
 
-print(f"Reading for wire-a (part-1): {crc.get_reading_for_wire('a')}")
+
+_crc = Circuit()
+_crc = run_circuit(instruction_manual_path="input/2015.07.1.in", crc=_crc)
+print(f"Reading for wire-a (part-1): {_crc.get_reading_for_wire('a')}")
+_crc = Circuit()
+_crc = run_circuit(instruction_manual_path="input/2015.07.2.in", crc=_crc)
+print(f"Reading for wire-a (part-2): {_crc.get_reading_for_wire('a')}")
