@@ -1,0 +1,19 @@
+# PyCharm
+.idea/
+
+# virtualenv
+venv/
+
+# mypy cache
+.mypy_cache/
+
+# pycache
+__pycache__
+
+# profiling files
+*.lprof
+
+# setup
+build/
+dist/
+*.egg-info
