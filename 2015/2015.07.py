@@ -1,3 +1,5 @@
+# Link to task: https://adventofcode.com/2022/day/7
+
 import re
 
 from ctypes import c_ushort
