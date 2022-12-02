@@ -1,3 +1,5 @@
+# Link to task: https://adventofcode.com/2022/day/1
+
 with open("input/2015.01.in", "r") as f:
     lines = f.readlines()
 

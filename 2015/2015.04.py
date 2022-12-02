@@ -1,3 +1,5 @@
+# Link to task: https://adventofcode.com/2022/day/4
+
 import hashlib
 
 with open("input/2015.04.in", "r") as f:

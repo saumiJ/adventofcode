@@ -1,3 +1,5 @@
+# Link to task: https://adventofcode.com/2022/day/6
+
 import numpy as np
 import matplotlib.pyplot as plt
 

@@ -1,3 +1,5 @@
+# Link to task: https://adventofcode.com/2022/day/3
+
 from copy import deepcopy
 
 Address = (int, int)
