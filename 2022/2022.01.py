@@ -9,7 +9,7 @@ def is_end_of_current_inventory(current_line: str) -> bool:
 
 
 # read file
-with open("01.in", "r") as f:
+with open("input/2022.01.in", "r") as f:
     lines = f.readlines()
 
 # add a newline character to end of line-list

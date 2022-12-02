@@ -69,7 +69,7 @@ def round_score(shapes: (Shape, Shape)) -> int:
 
 
 # read strategy guide
-with open("02.in", "r") as f:
+with open("input/2022.02.in", "r") as f:
     lines = f.readlines()
 
 part_1_strategy = Strategy.SHAPE
