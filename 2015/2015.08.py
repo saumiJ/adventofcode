@@ -1,4 +1,4 @@
-# Link to task: https://adventofcode.com/2022/day/7
+# Link to task: https://adventofcode.com/2022/day/8
 
 import re
 import logging
