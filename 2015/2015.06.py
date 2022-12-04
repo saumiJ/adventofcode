@@ -50,7 +50,7 @@ class Action(Enum):
 
 
 with open("input/2015.06.in", "r") as f:
-    lines = f.readlines()
+    lines = f.read().splitlines()
 
 num_lights_per_row = 1000
 _grd_part_1 = np.zeros(shape=(num_lights_per_row, num_lights_per_row), dtype=bool)

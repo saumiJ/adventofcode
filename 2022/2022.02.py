@@ -70,14 +70,13 @@ def round_score(shapes: (Shape, Shape)) -> int:
 
 # read strategy guide
 with open("input/2022.02.in", "r") as f:
-    lines = f.readlines()
+    lines = f.read().splitlines()
 
 part_1_strategy = Strategy.SHAPE
 part_2_strategy = Strategy.OUTCOME
 total_score_part_1 = 0
 total_score_part_2 = 0
 for line in lines:
-    line = line.strip("\n")
     total_score_part_1 += round_score(part_1_strategy.get_shapes(line))
     total_score_part_2 += round_score(part_2_strategy.get_shapes(line))
 print(f"Part-1 score: {total_score_part_1}\n"

@@ -5,7 +5,7 @@ from copy import deepcopy
 Address = (int, int)
 
 with open("input/2015.03.in", "r") as f:
-    lines = f.readlines()
+    lines = f.read().splitlines()
 
 
 def move_to_new_address(current_address: Address, instr: str) -> Address:

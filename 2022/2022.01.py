@@ -5,15 +5,12 @@ import numpy as np
 
 def is_end_of_current_inventory(current_line: str) -> bool:
     """check if inventory of current elf is completed"""
-    return current_line == "\n"
+    return current_line == ""
 
 
 # read file
 with open("input/2022.01.in", "r") as f:
-    lines = f.readlines()
-
-# add a newline character to end of line-list
-lines.append("\n")
+    lines = f.read().splitlines()
 
 
 # count calories

@@ -145,7 +145,7 @@ def create_sources(txt: Union[str, List[str]], _crc: Circuit) -> (Union[Source, 
 
 def run_circuit(instruction_manual_path: str, crc: Circuit):
     with open(instruction_manual_path, "r") as f:
-        lines = f.readlines()
+        lines = f.read().splitlines()
     for line in lines:
         gate_search = re.search(r"[A-Z]+", line)
         if gate_search is not None:

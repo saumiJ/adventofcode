@@ -1,7 +1,7 @@
 # Link to task: https://adventofcode.com/2022/day/5
 
 with open("input/2015.05.in", "r") as f:
-    lines = f.readlines()
+    lines = f.read().splitlines()
 
 vowels = ["a", "e", "i", "o", "u"]
 forbidden_strings = ["ab", "cd", "pq", "xy"]
