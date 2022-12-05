@@ -35,13 +35,9 @@ for line in crate_stacks_input[-2::-1]:
 
 def top_crates_after_rearrangement(s2c: dict, one_at_a_time: bool) -> str:
     for (num_crates, from_stack, to_stack) in instructions:
-        if one_at_a_time:
-            for _ in range(num_crates):
-                crate = s2c[from_stack].pop()
-                s2c[to_stack].append(crate)
-        else:
-            s2c[to_stack].extend(s2c[from_stack][-num_crates:])
-            del s2c[from_stack][-num_crates:]
+        crates_to_move = s2c[from_stack][-num_crates:]
+        s2c[to_stack].extend(crates_to_move[::-1] if one_at_a_time else crates_to_move)
+        del s2c[from_stack][-num_crates:]
     return "".join([s2c[s][-1] for s in stacks])
 
 
