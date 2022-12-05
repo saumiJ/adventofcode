@@ -8,27 +8,29 @@ from copy import deepcopy
 with open("input/2022.05.in", "r") as f:
     lines = f.read().splitlines()
 
+# read crate-arrangement and movement-instructions
+crate_stacks_input = list()
 instructions = list()
 for line in lines:
     if not line.startswith("move"):
-        continue
+        if line == "":
+            continue
+        crate_stacks_input.append(line)
+    else:
+        res = re.search(r'move ([0-9]+) from ([0-9]+) to ([0-9]+)', line)
+        instructions.append([int(n) for n in res.groups()])
 
-    res = re.search(r'move ([0-9]+) from ([0-9]+) to ([0-9]+)', line)
-    instructions.append([int(n) for n in res.groups()])
-
-# TODO: automate reading crate-arrangement
-stack_to_crates = {
-    1: ["B", "P", "N", "Q", "H", "D", "R", "T"],
-    2: ["W", "G", "B", "J", "T", "V"],
-    3: ["N", "R", "H", "D", "S", "V", "M", "Q"],
-    4: ["P", "Z", "N", "M", "C"],
-    5: ["D", "Z", "B"],
-    6: ["V", "C", "W", "Z"],
-    7: ["G", "Z", "N", "C", "V", "Q", "L", "S"],
-    8: ["L", "G", "J", "M", "D", "N", "V"],
-    9: ["T", "P", "M", "F", "Z", "C", "G"]
-}
-stacks = range(1, len(stack_to_crates.keys())+1)
+# parse crate-arrangement
+stacks = [int(s) for s in re.findall(r'([0-9]+)', crate_stacks_input[-1])]
+stack_to_crates = {s: [] for s in stacks}
+for line in crate_stacks_input[-2::-1]:
+    res = re.findall(r'(\[[A-Z]]| {4})', line)
+    for i, crate in enumerate(res):
+        if crate.startswith(" "):
+            continue
+        crate = crate.strip('[').strip(']')
+        stack = stacks[i]
+        stack_to_crates[stack].append(crate)
 
 
 def top_crates_after_rearrangement(s2c: dict, one_at_a_time: bool) -> str:
