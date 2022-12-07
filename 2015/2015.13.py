@@ -47,10 +47,13 @@ def calculate(cur: int, visited: List[int], pids_set: set, _hapmat) -> int:
     visited.append(cur)
     # find remaining persons to seat
     todos = pids_set - set(visited)
-    if len(todos) == 1:
-        # only one person left to seat; remember to add relation with the first person seated
-        place_a = todos.pop()
-        return _hapmat[cur, place_a] + _hapmat[visited[0], place_a]
+    if len(todos) == 2:
+        # only two persons left to seat
+        person_a, person_b = todos
+        cur_a_hap, cur_b_hap = _hapmat[cur, person_a], _hapmat[cur, person_b]  # their happiness with current
+        ab_hap = _hapmat[person_a, person_b]  # their mutual happiness
+        a0_hap, b0_hap = _hapmat[visited[0], person_a], _hapmat[visited[0], person_b]  # their happiness with first
+        return max(cur_a_hap + ab_hap + b0_hap, cur_b_hap + ab_hap + a0_hap)
     required_happiness_to_cur = 0
     for todo in todos:
         new_happiness = calculate(todo, deepcopy(visited), pids_set, _hapmat)
