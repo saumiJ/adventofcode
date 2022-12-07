@@ -41,7 +41,7 @@ person_ids_set = set(range(num_persons))
 persons_ids_set_with_me = set(range(num_persons+1))
 
 
-# curry the happiness-function
+# happiness-function
 def calculate(cur: int, visited: List[int], pids_set: set, _hapmat) -> int:
     # mark current person as seated
     visited.append(cur)
