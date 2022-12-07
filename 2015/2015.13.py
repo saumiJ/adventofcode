@@ -14,9 +14,9 @@ with open("input/2015.13.in", "r") as f:
 # read relations
 people = list()
 p1_to_p2_to_happiness = defaultdict(dict)
-regex = r'([A-Z|a-z]+) would ([a-z]+) ([0-9]+) happiness units by sitting next to ([A-Z|a-z]+)'
 for line in lines:
-    res = re.search(regex, line).groups()
+    res = re.search(r'([A-Z|a-z]+) would ([a-z]+) ([0-9]+) happiness units by sitting next to ([A-Z|a-z]+)',
+                    line).groups()
     person_1, gain_or_lose, happiness, person_2 = res[0], res[1], int(res[2]), res[3]
     sign = 1. if gain_or_lose == "gain" else -1
     p1_to_p2_to_happiness[person_1][person_2] = sign * happiness
