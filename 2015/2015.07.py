@@ -3,7 +3,7 @@
 import re
 
 from ctypes import c_ushort
-from typing import Optional, List, Union
+from typing import Optional, List, Tuple, Union
 
 Source = Union["Component", "Signal"]
 
@@ -132,7 +132,7 @@ class Circuit:
         self.wire_label_to_wire_object[label].reset()
 
 
-def create_sources(txt: Union[str, List[str]], _crc: Circuit) -> (Union[Source, List[Source]], Circuit):
+def create_sources(txt: Union[str, List[str]], _crc: Circuit) -> Tuple[Union[Source, List[Source]], Circuit]:
     if isinstance(txt, str):
         txt = [txt]
     s_list = list()
@@ -143,54 +143,63 @@ def create_sources(txt: Union[str, List[str]], _crc: Circuit) -> (Union[Source, 
     return s, _crc
 
 
+def parse_not_gate(line: str, crc: Circuit):
+    lb_l, lb_r = re.search(r"NOT ([a-z]+|[0-9]+) -> ([a-z]+)", line).groups()
+    (s_l, crc), w_r = create_sources(lb_l, crc), crc.add_wires(lb_r)
+    g = Not([s_l])
+    w_r.add_srcs([g])
+
+
+def parse_shift_gate(line: str, crc: Circuit, gate_name: str):
+    lb_l, shift, lb_r = re.search(rf"([a-z]+|[0-9]+) {gate_name} ([0-9]+) -> ([a-z]+)", line).groups()
+    (s_l, crc), w_r = create_sources(lb_l, crc), crc.add_wires(lb_r)
+    gate_class = LeftShift if gate_name == "LSHIFT" else RightShift
+    g = gate_class(int(shift), [s_l])
+    w_r.add_srcs([g])
+
+
+def parse_binary_gate(line: str, crc: Circuit, gate_name: str):
+    lb_l1, lb_l2, lb_r = re.search(rf"([a-z]+|[0-9]+) {gate_name} ([a-z]+|[0-9]+) -> ([a-z]+)", line).groups()
+    ((s_l1, s_l2), crc), w_r = create_sources([lb_l1, lb_l2], crc), crc.add_wires(lb_r)
+    gate_class = And if gate_name == "AND" else Or
+    g = gate_class([s_l1, s_l2])
+    w_r.add_srcs([g])
+
+
+def parse_signal_assignment(line: str, crc: Circuit):
+    src, lb = re.search(r"([0-9]+) -> ([a-z]+)", line).groups()
+    w = crc.add_wires(lb)
+    w.add_srcs([Signal(src)])
+
+
+def parse_wire_connection(line: str, crc: Circuit):
+    lb_l, lb_r = re.search(r"([a-z]+) -> ([a-z]+)", line).groups()
+    w_l, w_r = crc.add_wires([lb_l, lb_r])
+    w_r.add_srcs([w_l])
+
+
 def run_circuit(instruction_manual_path: str, crc: Circuit):
     with open(instruction_manual_path, "r") as f:
         lines = f.read().splitlines()
     for line in lines:
         gate_search = re.search(r"[A-Z]+", line)
-        if gate_search is not None:
+        if gate_search:
             gate_name = gate_search.group()
             if gate_name == "NOT":
-                lb_l, lb_r = re.search(r"NOT ([a-z]+|[0-9]+) -> ([a-z]+)", line).groups()
-                (s_l, crc), w_r = create_sources(lb_l, crc), crc.add_wires(lb_r)
-                g = Not([s_l])
-                w_r.add_srcs([g])
-            elif gate_name == "LSHIFT":
-                lb_l, shift, lb_r = re.search(r"([a-z]+|[0-9]+) LSHIFT ([0-9]+) -> ([a-z]+)", line).groups()
-                (s_l, crc), w_r = create_sources(lb_l, crc), crc.add_wires(lb_r)
-                g = LeftShift(int(shift), [s_l])
-                w_r.add_srcs([g])
-            elif gate_name == "RSHIFT":
-                lb_l, shift, lb_r = re.search(r"([a-z]+|[0-9]+) RSHIFT ([0-9]+) -> ([a-z]+)", line).groups()
-                (s_l, crc), w_r = create_sources(lb_l, crc), crc.add_wires(lb_r)
-                g = RightShift(int(shift), [s_l])
-                w_r.add_srcs([g])
-            elif gate_name == "AND":
-                lb_l1, lb_l2, lb_r = re.search(r"([a-z]+|[0-9]+) AND ([a-z]+|[0-9]+) -> ([a-z]+)", line).groups()
-                ((s_l1, s_l2), crc), w_r = create_sources([lb_l1, lb_l2], crc), crc.add_wires(lb_r)
-                g = And([s_l1, s_l2])
-                w_r.add_srcs([g])
-            elif gate_name == "OR":
-                lb_l1, lb_l2, lb_r = re.search(r"([a-z]+|[0-9]+) OR ([a-z]+|[0-9]+) -> ([a-z]+)", line).groups()
-                ((s_l1, s_l2), crc), w_r = create_sources([lb_l1, lb_l2], crc), crc.add_wires(lb_r)
-                g = Or([s_l1, s_l2])
-                w_r.add_srcs([g])
+                parse_not_gate(line, crc)
+            elif gate_name in ["LSHIFT", "RSHIFT"]:
+                parse_shift_gate(line, crc, gate_name)
+            elif gate_name in ["AND", "OR"]:
+                parse_binary_gate(line, crc, gate_name)
             else:
-                raise NotImplementedError(gate_name)
+                raise NotImplementedError(f"Unsupported gate: {gate_name}")
         else:
-            source_search = re.search(r"([0-9]+) -> ([a-z]+)", line)
-            if source_search is not None:
-                src, lb = source_search.groups()
-                w = crc.add_wires(lb)
-                w.add_srcs([Signal(src)])
+            if re.search(r"[0-9]+ -> [a-z]+", line):
+                parse_signal_assignment(line, crc)
+            elif re.search(r"[a-z]+ -> [a-z]+", line):
+                parse_wire_connection(line, crc)
             else:
-                connector_search = re.search("([a-z]+) -> ([a-z]+)", line)
-                if connector_search is not None:
-                    lb_l, lb_r = connector_search.groups()
-                    w_l, w_r = crc.add_wires([lb_l, lb_r])
-                    w_r.add_srcs([w_l])
-                else:
-                    raise NotImplementedError(line)
+                raise NotImplementedError(f"Unsupported instruction: {line}")
     return crc
 
 
